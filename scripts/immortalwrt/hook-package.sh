@@ -46,9 +46,6 @@ rm -rf package/network/utils/xdp-tools
 git clone --depth 1 https://github.com/sbwml/package_network_utils_xdp-tools package/network/utils/xdp-tools
 
 # clang
-# xtables-addons module
-rm -rf customfeeds/packages/net/xtables-addons
-git clone https://$github/sbwml/kmod_packages_net_xtables-addons customfeeds/packages/net/xtables-addons -b openwrt-25.12
 # netatop
 sed -i 's/$(MAKE)/$(KERNEL_MAKE)/g' customfeeds/packages/admin/netatop/Makefile
 curl -s $mirror/openwrt/patch/packages-patches/clang/netatop/900-fix-build-with-clang.patch > customfeeds/packages/admin/netatop/patches/900-fix-build-with-clang.patch
