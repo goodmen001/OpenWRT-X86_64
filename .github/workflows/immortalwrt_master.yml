@@ -1,4 +1,4 @@
-name: immortalwrt_master
+name: immortalwrt_master_6_18
 
 on:
   repository_dispatch:
@@ -29,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@main
 
     - name: Initialization Environment
       env:
@@ -43,6 +43,8 @@ jobs:
         [ -f /etc/issue.net ] && cat /etc/issue.net
         [ -f /etc/issue ] && cat /etc/issue
         ulimit -a
+        echo "LANG=en_US.UTF-8" >> $GITHUB_ENV
+        echo "LC_ALL=en_US.UTF-8" >> $GITHUB_ENV
         
     - name: Clone Source Code
       run: |
@@ -64,8 +66,7 @@ jobs:
         git clone --depth=1 https://github.com/openwrt/telephony -b $REPO_BRANCH customfeeds/telephony
         echo "::group::Executing package hook scripts"
         find ../scripts -type f -name "*.sh" -exec chmod +x {} +
-        ../scripts/immortalwrt/hook-package00.sh
-        ../scripts/immortalwrt/hook-package01.sh
+        ../scripts/immortalwrt/hook-package.sh
         ../scripts/immortalwrt/hook-base.sh
         echo "::endgroup::"
         ../scripts/immortalwrt/hook-feeds.sh
@@ -83,10 +84,7 @@ jobs:
         ../$DIY_SH
         ../scripts/preset-clash-core.sh amd64
         ../scripts/preset-nikki-core.sh amd64
-        ../scripts/zsh_master/preset-terminal-tools.sh
-        # echo "::group::Run the 6.12 upgrade patch"
-        # ../scripts/patch/up6_12_patch.sh
-        # echo "::endgroup::"
+        ../scripts/preset-terminal-tools.sh
         echo "::group::View 'make defconfig' output"
         make defconfig
         echo "::endgroup::"
@@ -159,7 +157,7 @@ jobs:
           echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@master
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -170,22 +168,22 @@ jobs:
           files: ${{ env.FIRMWARE }}/*
 
     - name: Delete workflow runs
-      uses: Mattraks/delete-workflow-runs@v2
+      uses: Mattraks/delete-workflow-runs@main
       with:
           retain_days: 5
           keep_minimum_runs: 5
 
     - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.3.4
+      uses: ophub/delete-releases-workflows@main
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
-          keep_latest: 480
+          delete_releases: true
+          releases_keep_latest: 480
           delete_tags: true
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh_token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Delete Artifacts
-      uses: geekyeggo/delete-artifact@v6
+      uses: geekyeggo/delete-artifact@main
       with:
          name: |
             bin-archive
